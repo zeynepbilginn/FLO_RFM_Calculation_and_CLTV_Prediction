@@ -28,9 +28,6 @@
 # customer_value_total_ever_online : Müşterinin online alışverişlerinde ödediği toplam ücret
 # interested_in_categories_12 : Müşterinin son 12 ayda alışveriş yaptığı kategorilerin listesi
 
-###############################################################
-# GÖREVLER
-###############################################################
 import numpy as np
 import pandas as pd
 
@@ -40,65 +37,6 @@ pd.set_option('display.width', 1000)
 pd.set_option('display.float_format', lambda x: '%.5f' % x)
 import datetime as dt
 
-# GÖREV 1: Veriyi Anlama (Data Understanding) ve Hazırlama
-# 1. flo_data_20K.csv verisini okuyunuz.
-
-
-
-# 2. Veri setinde
-# a. İlk 10 gözlem,
-# b. Değişken isimleri,
-# c. Betimsel istatistik,
-# d. Boş değer,
-# e. Değişken tipleri, incelemesi yapın
-# 3. Omnichannel müşterilerin hem online'dan hemde offline platformlardan alışveriş yaptığını ifade etmektedir. Herbir müşterinin toplam
-# alışveriş sayısı ve harcaması için yeni değişkenler oluşturun.
-
-
-# 4. Değişken tiplerini inceleyiniz. Tarih ifade eden değişkenlerin tipini date'e çeviriniz.
-
-
-# 5. Alışveriş kanallarındaki müşteri sayısının, ortalama alınan ürün sayısının ve ortalama harcamaların dağılımına bakınız.
-
-
-# 6. En fazla kazancı getiren ilk 10 müşteriyi sıralayınız.
-
-
-# 7. En fazla siparişi veren ilk 10 müşteriyi sıralayınız.
-# 8. Veri ön hazırlık sürecini fonksiyonlaştırınız.
-
-
-# GÖREV 2: RFM Metriklerinin Hesaplanması
-
-# GÖREV 3: RF ve RFM Skorlarının Hesaplanması
-
-# GÖREV 4: RF Skorlarının Segment Olarak Tanımlanması
-
-# GÖREV 5: Aksiyon zamanı!
-# 1. Segmentlerin recency, frequnecy ve monetary ortalamalarını inceleyiniz.
-# 2. RFM analizi yardımı ile 2 case için ilgili profildeki müşterileri bulun ve müşteri id'lerini csv ye kaydediniz.
-# a. FLO bünyesine yeni bir kadın ayakkabı markası dahil ediyor. Dahil ettiği markanın ürün fiyatları genel müşteri tercihlerinin üstünde. Bu nedenle markanın
-# tanıtımı ve ürün satışları için ilgilenecek profildeki müşterilerle özel olarak iletişime geçeilmek isteniliyor. Sadık müşterilerinden(champions,loyal_customers),
-# ortalama 250 TL üzeri ve kadın kategorisinden alışveriş yapan kişiler özel olarak iletişim kuralacak müşteriler. Bu müşterilerin id numaralarını csv dosyasına
-# yeni_marka_hedef_müşteri_id.cvs olarak kaydediniz.
-# b. Erkek ve Çoçuk ürünlerinde %40'a yakın indirim planlanmaktadır. Bu indirimle ilgili kategorilerle ilgilenen geçmişte iyi müşteri olan ama uzun süredir
-# alışveriş yapmayan kaybedilmemesi gereken müşteriler, uykuda olanlar ve yeni gelen müşteriler özel olarak hedef alınmak isteniliyor. Uygun profildeki müşterilerin id'lerini csv dosyasına indirim_hedef_müşteri_ids.csv
-# olarak kaydediniz.
-
-
-# GÖREV 6: Tüm süreci fonksiyonlaştırınız.
-
-###############################################################
-# GÖREV 1: Veriyi  Hazırlama ve Anlama (Data Understanding)
-###############################################################
-
-# 2. Veri setinde
-# a. İlk 10 gözlem,
-# b. Değişken isimleri,
-# c. Boyut,
-# d. Betimsel istatistik,
-# e. Boş değer,
-# f. Değişken tipleri, incelemesi yapınız.
 
 df = pd.read_csv("Miuul_CRM/Datasets/flo_data_20k.csv")
 df.head(10)
@@ -109,14 +47,9 @@ df.info()
 
 df.info()
 
-# 3. Omnichannel müşterilerin hem online'dan hemde offline platformlardan alışveriş yaptığını ifade etmektedir.
-# Herbir müşterinin toplam alışveriş sayısı ve harcaması için yeni değişkenler oluşturunuz.
 
 df["total_transaction"] = df["order_num_total_ever_online"] + df["order_num_total_ever_offline"]
 df["total_price"] = df["customer_value_total_ever_offline"] + df["customer_value_total_ever_online"]
-
-# 4. Değişken tiplerini inceleyiniz. Tarih ifade eden değişkenlerin tipini date'e çeviriniz.
-
 
 date_columns = df.columns[df.columns.str.contains("date")]
 for col in date_columns:
@@ -124,20 +57,17 @@ for col in date_columns:
 # df["last_order_date"] = df["last_order_date"].apply(pd.to_datetime)
 
 
-# 5. Alışveriş kanallarındaki müşteri sayısının, toplam alınan ürün sayısı ve toplam harcamaların dağılımına bakınız.
+
 df.groupby("order_channel").agg({"master_id": "count",
                                  "total_price": "mean",
                                  "total_transaction": "mean"})
 
 
-# 6. En fazla kazancı getiren ilk 10 müşteriyi sıralayınız.
 df.sort_values("total_price",ascending=False).head(10)
 
-# 7. En fazla siparişi veren ilk 10 müşteriyi sıralayınız.
+
 df.sort_values("total_transaction",ascending=False).head(10)
 
-
-# 8. Veri ön hazırlık sürecini fonksiyonlaştırınız.
 
 def data_preperation(df):
     df["total_transaction"] = df["order_num_total_ever_online"] + df["order_num_total_ever_offline"]
@@ -145,9 +75,8 @@ def data_preperation(df):
     date_columns = df.columns[df.columns.str.contains("date")]
     for col in date_columns:
         df[col] = pd.to_datetime(df[col], format='%Y-%m-%d')
-###############################################################
-# GÖREV 2: RFM Metriklerinin Hesaplanması
-###############################################################
+
+# RFM Metriklerinin Hesaplanması
 
 # Veri setindeki en son alışverişin yapıldığı tarihten 2 gün sonrasını analiz tarihi
 df["last_order_date"].max()
@@ -158,9 +87,8 @@ rfm = df.groupby("master_id").agg({"last_order_date": lambda x: (analiz_date - x
                                    "total_transaction": lambda x: x,
                                    "total_price": lambda x: x})
 rfm.columns = ["recency", "frequency", "monetary"]
-###############################################################
-# GÖREV 3: RF ve RFM Skorlarının Hesaplanması (Calculating RF and RFM Scores)
-###############################################################
+
+# RF ve RFM Skorlarının Hesaplanması (Calculating RF and RFM Scores)
 
 #  Recency, Frequency ve Monetary metriklerini qcut yardımı ile 1-5 arasında skorlara çevrilmesi ve
 # Bu skorları recency_score, frequency_score ve monetary_score olarak kaydedilmesi
@@ -171,9 +99,9 @@ rfm["monetary_score"] = pd.qcut(rfm["monetary"],5,[1,2,3,4,5])
 # recency_score ve frequency_score’u tek bir değişken olarak ifade edilmesi ve RF_SCORE olarak kaydedilmesi
 rfm["RF_SCORE"] = rfm["recency_score"].astype(str) + rfm["frequency_score"].astype(str)
 rfm.info()
-###############################################################
-# GÖREV 4: RF Skorlarının Segment Olarak Tanımlanması
-###############################################################
+
+#  RF Skorlarının Segment Olarak Tanımlanması
+
 
 # Oluşturulan RFM skorların daha açıklanabilir olması için segment tanımlama ve  tanımlanan seg_map yardımı ile RF_SCORE'u segmentlere çevirme
 seg_map = {
@@ -191,23 +119,20 @@ seg_map = {
 
 rfm["segment"] = rfm["RF_SCORE"].replace(seg_map, regex=True)
 
-###############################################################
-# GÖREV 5: Aksiyon zamanı!
-###############################################################
 
-# 1. Segmentlerin recency, frequnecy ve monetary ortalamalarını inceleyiniz.
+# Segmentlerin recency, frequnecy ve monetary ortalamaları
 
 rfm.groupby("segment").agg({"recency": "mean",
                             "frequency": "mean",
                             "monetary": "mean"})
 
 
-# 2. RFM analizi yardımı ile 2 case için ilgili profildeki müşterileri bulunuz ve müşteri id'lerini csv ye kaydediniz.
+# RFM analizi yardımı ile 2 case için ilgili profildeki müşterileri bulunuz ve müşteri id'lerini csv ye kaydetme.
 
 # a. FLO bünyesine yeni bir kadın ayakkabı markası dahil ediyor. Dahil ettiği markanın ürün fiyatları genel müşteri tercihlerinin üstünde. Bu nedenle markanın
 # tanıtımı ve ürün satışları için ilgilenecek profildeki müşterilerle özel olarak iletişime geçeilmek isteniliyor. Bu müşterilerin sadık  ve
 # kadın kategorisinden alışveriş yapan kişiler olması planlandı. Müşterilerin id numaralarını csv dosyasına yeni_marka_hedef_müşteri_id.cvs
-# olarak kaydediniz.
+# olarak kaydetme.
 rfm_filter = rfm["segment"]
 result_df = pd.merge(df, rfm_filter, on="master_id", how="left")
 
@@ -215,7 +140,7 @@ women_and_loyal_customer = result_df[(result_df["segment"] == "loyal_customers")
 women_and_loyal_customer["master_id"].to_csv("women_and_loyal_customer.csv")
 # b. Erkek ve Çoçuk ürünlerinde %40'a yakın indirim planlanmaktadır. Bu indirimle ilgili kategorilerle ilgilenen geçmişte iyi müşterilerden olan ama uzun süredir
 # alışveriş yapmayan ve yeni gelen müşteriler özel olarak hedef alınmak isteniliyor. Uygun profildeki müşterilerin id'lerini csv dosyasına indirim_hedef_müşteri_ids.csv
-# olarak kaydediniz.
+# olarak kaydetme
 
 cant_loose_and_at_risk_df = result_df[(result_df["segment"] == "at_Risk") | (result_df["segment"] == "cant_loose")]
 
