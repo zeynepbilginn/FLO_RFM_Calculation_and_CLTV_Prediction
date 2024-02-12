@@ -1,32 +1,31 @@
-###############################################################
-# RFM ile Müşteri Segmentasyonu (Customer Segmentation with RFM)
-###############################################################
+######################## ##################
+# Customer Segmentation with RFM
+######################## ##################
 
-###############################################################
-# İş Problemi (Business Problem)
-###############################################################
-# FLO müşterilerini segmentlere ayırıp bu segmentlere göre pazarlama stratejileri belirlemek istiyor.
-# Buna yönelik olarak müşterilerin davranışları tanımlanacak ve bu davranış öbeklenmelerine göre gruplar oluşturulacak..
+######################## ##################
+# Business Issue
+######################## ##################
+# FLO wants to divide its customers into segments and determine marketing strategies according to these segments.
+# In this regard, customers' behaviors will be defined and groups will be created according to these behavioral clusters.
 
-###############################################################
-# Veri Seti Hikayesi
-###############################################################
+######################## ##################
+# Dataset Story
+######################## ##################
+# The data set is based on historical shopping behavior of customers who made their last purchases (both online and offline shopping) on OmniChannel in 2020 - 2021.
+# consists of the information obtained.
 
-# Veri seti son alışverişlerini 2020 - 2021 yıllarında OmniChannel(hem online hem offline alışveriş yapan) olarak yapan müşterilerin geçmiş alışveriş davranışlarından
-# elde edilen bilgilerden oluşmaktadır.
-
-# master_id: Eşsiz müşteri numarası
-# order_channel : Alışveriş yapılan platforma ait hangi kanalın kullanıldığı (Android, ios, Desktop, Mobile, Offline)
-# last_order_channel : En son alışverişin yapıldığı kanal
-# first_order_date : Müşterinin yaptığı ilk alışveriş tarihi
-# last_order_date : Müşterinin yaptığı son alışveriş tarihi
-# last_order_date_online : Muşterinin online platformda yaptığı son alışveriş tarihi
-# last_order_date_offline : Muşterinin offline platformda yaptığı son alışveriş tarihi
-# order_num_total_ever_online : Müşterinin online platformda yaptığı toplam alışveriş sayısı
-# order_num_total_ever_offline : Müşterinin offline'da yaptığı toplam alışveriş sayısı
-# customer_value_total_ever_offline : Müşterinin offline alışverişlerinde ödediği toplam ücret
-# customer_value_total_ever_online : Müşterinin online alışverişlerinde ödediği toplam ücret
-# interested_in_categories_12 : Müşterinin son 12 ayda alışveriş yaptığı kategorilerin listesi
+# master_id: Unique customer number
+#order_channel: Which channel of the shopping platform is used (Android, iOS, Desktop, Mobile, Offline)
+# last_order_channel : Channel where the last purchase was made
+#first_order_date: Customer's first purchase date
+# last_order_date : Customer's last shopping date
+# last_order_date_online : The customer's last shopping date on the online platform
+# last_order_date_offline : The customer's last shopping date on the offline platform
+# order_num_total_ever_online : Total number of purchases made by the customer on the online platform
+# order_num_total_ever_offline : Total number of purchases made by the customer offline
+# customer_value_total_ever_offline : The total price the customer paid for offline purchases
+# customer_value_total_ever_online : The total price the customer paid for online purchases
+#interest_in_categories_12 : List of categories the customer has shopped in the last 12 months
 
 import numpy as np
 import pandas as pd
@@ -76,9 +75,9 @@ def data_preperation(df):
     for col in date_columns:
         df[col] = pd.to_datetime(df[col], format='%Y-%m-%d')
 
-# RFM Metriklerinin Hesaplanması
+# Calculation of RFM Metrics
 
-# Veri setindeki en son alışverişin yapıldığı tarihten 2 gün sonrasını analiz tarihi
+# The analysis date is 2 days after the date of the last purchase in the data set.
 df["last_order_date"].max()
 analiz_date = dt.datetime(2021, 6, 1)
 
@@ -88,10 +87,11 @@ rfm = df.groupby("master_id").agg({"last_order_date": lambda x: (analiz_date - x
                                    "total_price": lambda x: x})
 rfm.columns = ["recency", "frequency", "monetary"]
 
-# RF ve RFM Skorlarının Hesaplanması (Calculating RF and RFM Scores)
+# Calculating RF and RFM Scores
 
-#  Recency, Frequency ve Monetary metriklerini qcut yardımı ile 1-5 arasında skorlara çevrilmesi ve
-# Bu skorları recency_score, frequency_score ve monetary_score olarak kaydedilmesi
+# Converting Recency, Frequency and Monetary metrics into scores between 1-5 with the help of qcut and
+# Saving these scores as recency_score, frequency_score and monetary_score
+
 rfm["recency_score"] = pd.qcut(rfm["recency"], 5, [5,4,3,2,1])
 rfm["frequency_score"] = pd.qcut(rfm["frequency"].rank(method='first'),5,[1,2,3,4,5])
 rfm["monetary_score"] = pd.qcut(rfm["monetary"],5,[1,2,3,4,5])
@@ -103,7 +103,8 @@ rfm.info()
 #  RF Skorlarının Segment Olarak Tanımlanması
 
 
-# Oluşturulan RFM skorların daha açıklanabilir olması için segment tanımlama ve  tanımlanan seg_map yardımı ile RF_SCORE'u segmentlere çevirme
+## To make the created RFM scores more explainable, define segments and convert RF_SCORE into segments with the help of the defined seg_map.
+
 seg_map = {
     r'[1-2][1-2]': 'hibernating',
     r'[1-2][3-4]': 'at_Risk',
@@ -120,27 +121,29 @@ seg_map = {
 rfm["segment"] = rfm["RF_SCORE"].replace(seg_map, regex=True)
 
 
-# Segmentlerin recency, frequnecy ve monetary ortalamaları
+# Recency, frequency and monetary averages of segments
 
 rfm.groupby("segment").agg({"recency": "mean",
                             "frequency": "mean",
                             "monetary": "mean"})
 
 
-# RFM analizi yardımı ile 2 case için ilgili profildeki müşterileri bulunuz ve müşteri id'lerini csv ye kaydetme.
+# Find the customers in the relevant profile for 2 cases with the help of RFM analysis and save the customer IDs to CSV.
 
-# a. FLO bünyesine yeni bir kadın ayakkabı markası dahil ediyor. Dahil ettiği markanın ürün fiyatları genel müşteri tercihlerinin üstünde. Bu nedenle markanın
-# tanıtımı ve ürün satışları için ilgilenecek profildeki müşterilerle özel olarak iletişime geçeilmek isteniliyor. Bu müşterilerin sadık  ve
-# kadın kategorisinden alışveriş yapan kişiler olması planlandı. Müşterilerin id numaralarını csv dosyasına yeni_marka_hedef_müşteri_id.cvs
-# olarak kaydetme.
+# a. FLO is adding a new women's shoe brand. The product prices of the included brand are above general customer preferences. Therefore the brand
+# We want to be able to specifically contact customers with the profile that would be interested in # promotion and product sales. These customers are loyal and
+# It was planned to have shoppers from the # women category. Enter the ID numbers of the customers into the csv file new_brand_target_customer_id.cvs
+# Save as #.
+
 rfm_filter = rfm["segment"]
 result_df = pd.merge(df, rfm_filter, on="master_id", how="left")
 
 women_and_loyal_customer = result_df[(result_df["segment"] == "loyal_customers") & (result_df["interested_in_categories_12"].apply(lambda x: "KADIN" in x))]
 women_and_loyal_customer["master_id"].to_csv("women_and_loyal_customer.csv")
-# b. Erkek ve Çoçuk ürünlerinde %40'a yakın indirim planlanmaktadır. Bu indirimle ilgili kategorilerle ilgilenen geçmişte iyi müşterilerden olan ama uzun süredir
-# alışveriş yapmayan ve yeni gelen müşteriler özel olarak hedef alınmak isteniliyor. Uygun profildeki müşterilerin id'lerini csv dosyasına indirim_hedef_müşteri_ids.csv
-# olarak kaydetme
+
+# b. Nearly 40% discount is planned for Men's and Children's products. Those who have been good customers in the past but have been for a long time are interested in categories related to this sale.
+# New customers who have not made purchases are specifically targeted. Save the IDs of customers in the appropriate profile to the csv file discount_target_customer_ids.csv
+# save as #
 
 cant_loose_and_at_risk_df = result_df[(result_df["segment"] == "at_Risk") | (result_df["segment"] == "cant_loose")]
 
